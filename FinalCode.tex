@@ -1,0 +1,110 @@
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+// Define constants for servo motors
+#define SHOULDER_SERVO 0#define ELBOW_SERVO 1
+#define WRIST_SERVO 2#define GRIPPER_SERVO 3
+// Define variables to store current servo positions
+int shoulderPos = 90;int elbowPos = 90;
+int wristPos = 90;
+int gripperPos = 30;
+// Define constants for servo calibration
+#define SERVOMIN 150#define SERVOMAX 600
+// Initialize Adafruit PWM servo driverAdafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+void setup() 
+{ 
+	// Set PWM frequency to 60 Hz (standard for most servos)  
+	pwm.begin();  pwm.setPWMFreq(60); 
+	// Initialize serial communication 
+	Serial.begin(9600);
+}
+void loop() 
+{  
+	int shoulderPWM = map(shoulderPos, 0, 180, SERVOMIN, SERVOMAX);  
+	int elbowPWM = map(elbowPos, 0, 180, SERVOMIN, SERVOMAX);  
+	int wristPWM = map(wristPos, 0, 180, SERVOMIN, SERVOMAX); 
+	int gripperPWM = map(gripperPos, 0, 180, SERVOMIN, SERVOMAX);   
+	pwm.setPWM(ELBOW_SERVO, 0, elbowPWM);  
+	delay(500);  
+	pwm.setPWM(SHOULDER_SERVO, 0, shoulderPWM); 
+	pwm.setPWM(WRIST_SERVO, 0, wristPWM);  
+	pwm.setPWM(GRIPPER_SERVO, 0, gripperPWM);   
+	// Wait for input from serial monitor  
+	while (!Serial.available());  
+	// Read input from serial monitor and move robot arm accordingly  
+	int shelfNum = Serial.parseInt();  
+	int CounterDegrees = Serial.parseInt();  
+	moveArmToShelf(shelfNum);  
+	moveArmToCounter(CounterDegrees);
+}
+void moveArmToShelf(int shelfNum) 
+{ 
+	// Calculate servo positions based on selected shelf number  switch (shelfNum) 
+	{    case 1:      
+		shoulderPos = 0;     
+		elbowPos = 20;      
+		wristPos = 30;     
+		break;   
+		case 2:     
+		shoulderPos = 30;     
+		elbowPos = 20;    
+		wristPos = 30;     
+		break;    
+		case 3:     
+		shoulderPos = 140;     
+		elbowPos = 30;      
+		wristPos = 60;     
+		break;    
+		case 4:     
+		shoulderPos = 140;      
+		elbowPos = 30;     
+		wristPos = 0;      
+		break;   
+		default:      Serial.println("Invalid shelf number.");     
+		return;  }  // Map servo positions to the calibrated range 
+	int shoulderPWM = map(shoulderPos, 0, 180, SERVOMIN, SERVOMAX);  
+	int elbowPWM = map(elbowPos, 0, 180, SERVOMIN, SERVOMAX);  
+	int wristPWM = map(wristPos, 0, 180, SERVOMIN, SERVOMAX);  
+	int gripperPWM = map(gripperPos, 0, 180, SERVOMIN, SERVOMAX);  // Move servos to new positions  
+	pwm.setPWM(SHOULDER_SERVO, 0, shoulderPWM);  
+	delay(500);  
+	pwm.setPWM(ELBOW_SERVO, 0, elbowPWM);  
+	pwm.setPWM(WRIST_SERVO, 0, wristPWM);  
+	// Wait for servo movement to complete delay(500);  
+	// Close gripper and wait for it to fully close 
+	pwm.setPWM(GRIPPER_SERVO, 0, map(90, 0, 180, SERVOMIN, SERVOMAX));  
+	delay(300); 
+}
+void moveArmToCounter(int CounterDegrees) 
+{  
+	// Move the arm to the counter position  
+	int shoulderCounterPos = 90;  
+	int elbowCounterPos = 50; 
+	int wristCounterPos = 40;  
+	// Map servo positions to the calibrated range 
+	int shoulderCounterPWM = map(shoulderCounterPos, 0, 180, SERVOMIN, SERVOMAX);  
+	int elbowCounterPWM = map(elbowCounterPos, 0, 180, SERVOMIN, SERVOMAX);  
+	int wristCounterPWM = map(wristCounterPos, 0, 180, SERVOMIN, SERVOMAX);  
+	// Move the arm to the counter position 
+	pwm.setPWM(ELBOW_SERVO, 0, elbowCounterPWM);  
+	delay(500); 
+	pwm.setPWM(SHOULDER_SERVO, 0, shoulderCounterPWM);  
+	pwm.setPWM(WRIST_SERVO, 0, wristCounterPWM); 
+	// Wait for the arm to reach the counter  delay(300);  
+	// Open the gripper to drop the medicine  
+	pwm.setPWM(GRIPPER_SERVO, 0,
+	map(30, 0, 180, SERVOMIN, SERVOMAX));  
+	delay(300);  
+	// Return the arm to the home position  
+	shoulderPos = 90;  
+	elbowPos = 90;  
+	wristPos = 90;  
+	// Map servo positions to the calibrated range 
+	int shoulderHomePWM = map(shoulderPos, 0, 180, SERVOMIN, SERVOMAX); 
+	int elbowHomePWM = map(elbowPos, 0, 180, SERVOMIN, SERVOMAX); 
+	int wristHomePWM = map(wristPos, 0, 180, SERVOMIN, SERVOMAX);  
+	// Move the arm to the home position  
+	pwm.setPWM(SHOULDER_SERVO, 0, shoulderHomePWM);  
+	pwm.setPWM(ELBOW_SERVO, 0, elbowHomePWM); 
+	pwm.setPWM(WRIST_SERVO, 0, wristHomePWM);  
+	// Wait for the arm to reach the home position
+}
